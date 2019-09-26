@@ -8,7 +8,7 @@ using UnityEngine;
 */
 public class NN
 {
-	public static readonly float octavesMax = 1f;
+	public static readonly float octavesMin = 1f;
 	public static readonly float octavesMax = 5f;
 
 	public readonly int width;
@@ -45,7 +45,7 @@ public class NN
 		}
 		for (int i = 0; i < width; i++)
 		{
-			octaves[i] = Random.Range(octavesMax, octavesMax);
+			octaves[i] = Random.Range(octavesMin, octavesMax);
 		}
 	}
 
@@ -108,7 +108,7 @@ public class NN
 			if(Random.value < chance * width)
 			{
 				octaves[i] += Random.Range(-0.5f, 0.5f);
-				if(octaves[i] < octavesMax) octaves[i] = octavesMax;
+				if(octaves[i] < octavesMin) octaves[i] = octavesMin;
 				else if(octaves[i] > octavesMax) octaves[i] = octavesMax;
 			}
 		}
