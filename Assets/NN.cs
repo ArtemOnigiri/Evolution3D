@@ -8,11 +8,12 @@ using UnityEngine;
 */
 public class NN
 {
-	public static readonly float octavesMin = 1f;
+	public static readonly float octavesMin = 0.01f;
 	public static readonly float octavesMax = 5f;
 
 	public readonly int width;
 	public readonly int layers = 4;
+	public readonly int reserved = 0;
 	public float[,] neurons;
 	public float[,] bias;
 	public float[,,] weights;
@@ -21,11 +22,12 @@ public class NN
 	// init with random weights and biasis
 	public NN(int width)
 	{
+		width += reserved;
 		this.width = width;
 		neurons = new float[layers, width];
 		bias = new float[layers - 1, width];
 		weights = new float[layers, width, width];
-		octaves = new float[width];
+		octaves = new float[width - reserved];
 		for(int i = 0; i < layers - 1; i++)
 		{
 			for (int j = 0; j < width; j++)
@@ -43,9 +45,12 @@ public class NN
 				}
 			}
 		}
-		for (int i = 0; i < width; i++)
+		for (int i = 0; i < width - reserved; i++)
 		{
-			octaves[i] = Random.Range(octavesMin, octavesMax);
+			float r = Random.value * Random.value;
+			r *= octavesMax - octavesMin;
+			r += octavesMin;
+			octaves[i] = r;
 		}
 	}
 
@@ -74,9 +79,43 @@ public class NN
 				}
 			}
 		}
-		for (int i = 0; i < width; i++)
+		for (int i = 0; i < width - reserved; i++)
 		{
 			octaves[i] = a.octaves[i];
+		}
+	}
+
+	// init by crossover
+	public NN(NN a, NN b, float rate)
+	{
+		width = a.width;
+		neurons = new float[layers, width];
+		bias = new float[layers - 1, width];
+		weights = new float[layers, width, width];
+		octaves = new float[width];
+		for (int i = 0; i < layers - 1; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				if(Random.value < rate) bias[i, j] = a.bias[i, j];
+				else bias[i, j] = b.bias[i, j];
+			}
+		}
+		for (int i = 0; i < layers; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				for (int k = 0; k < width; k++)
+				{
+					if(Random.value < rate) weights[i, j, k] = a.weights[i, j, k];
+					else weights[i, j, k] = b.weights[i, j, k];
+				}
+			}
+		}
+		for (int i = 0; i < width - reserved; i++)
+		{
+			if(Random.value < rate) octaves[i] = a.octaves[i];
+			else octaves[i] = b.octaves[i];
 		}
 	}
 
@@ -103,11 +142,11 @@ public class NN
 				}
 			}
 		}
-		for (int i = 0; i < width; i++)
+		for (int i = 0; i < width - reserved; i++)
 		{
 			if(Random.value < chance * width)
 			{
-				octaves[i] += Random.Range(-0.5f, 0.5f);
+				octaves[i] += Random.Range(-rate, rate);
 				if(octaves[i] < octavesMin) octaves[i] = octavesMin;
 				else if(octaves[i] > octavesMax) octaves[i] = octavesMax;
 			}
@@ -117,9 +156,9 @@ public class NN
 	// propogation
 	public void Update()
 	{
-		for (int i = 0; i < width; i++)
+		for (int i = 0; i < width - reserved; i++)
 		{
-			neurons[0, i] = Mathf.Sin(Main.time * octaves[i]);
+			neurons[0, i + reserved] = Mathf.Sin(Main.time * octaves[i]);
 		}
 		for (int i = 1; i < layers; i++)
 		{
@@ -131,7 +170,6 @@ public class NN
 					neurons[i, j] += neurons[i - 1, k] * weights[i, j, k];
 				}
 				neurons[i, j] += bias[i - 1, j];
-				neurons[i, j] /= width * 0.25f;
 				if (neurons[i, j] < -1f) neurons[i, j] = -1f;
 				else if (neurons[i, j] > 1f) neurons[i, j] = 1f;
 			}

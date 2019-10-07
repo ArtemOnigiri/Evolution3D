@@ -151,11 +151,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   headPrefab: {fileID: 5027172730729411918, guid: 268e77e7aa1a1dc4fbd0e0a2d32102a9,
     type: 3}
-  tailPrefab: {fileID: 4953778652296483256, guid: 1e3e401c8a05f594b9cd5be1d8079bb6,
+  cubePrefab: {fileID: 4953778652296483256, guid: 1e3e401c8a05f594b9cd5be1d8079bb6,
     type: 3}
-  targetPrefab: {fileID: 5027172730729411918, guid: 268e77e7aa1a1dc4fbd0e0a2d32102a9,
+  foodPrefab: {fileID: 5098559338366282374, guid: caddc65b56d74a84696965484e949d93,
     type: 3}
-  generationTime: 60
+  generationTime: 20
+  crossover: 1
 --- !u!4 &546588574
 Transform:
   m_ObjectHideFlags: 0

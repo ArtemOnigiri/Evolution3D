@@ -11,25 +11,33 @@ public class Main : MonoBehaviour
 	public static int generation = 0;
 
 	public GameObject headPrefab;
-	public GameObject tailPrefab;
+	public GameObject cubePrefab;
+	public GameObject foodPrefab;
 	public float generationTime = 120f;
+	public bool crossover = true;
 
 	private List<Creature> creatures = new List<Creature>();
 	private string date;
 
-	// Start is called before the first frame update
 	void Start()
 	{
-		Application.targetFrameRate = 300;
-		for (int i = 0; i < population; i++)
+		// spawn in grid
+		for (int i = 0; i < 10; i++)
 		{
-			creatures.Add(new Creature(headPrefab, tailPrefab, (i - population / 2) * 15, 0));
+			for (int j = 0; j < 10; j++)
+			{
+				creatures.Add(new Creature(headPrefab, cubePrefab, foodPrefab, (i - 10 / 2) * 50, (j - 10 / 2) * 50));
+			}
 		}
-		date = System.DateTime.Now.ToString("yyyyMMddHHmmss");
+		// spawn in line
+		/*for (int i = 0; i < population; i++)
+		{
+			creatures.Add(new Creature(headPrefab, cubePrefab, foodPrefab, (i - population / 2) * 20, 0));
+		}*/
+		date = System.DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 	}
 
-	// Update is called once per frame
-	void Update()
+	void FixedUpdate()
 	{
 		for (int i = 0; i < population; i++)
 		{
@@ -38,9 +46,15 @@ public class Main : MonoBehaviour
 		if(time > generationTime)
 		{
 			creatures.Sort((a, b) => b.GetFitness().CompareTo(a.GetFitness()));
+			float avgFitness = 0f;
+			for (int i = 0; i < population; i++)
+			{
+				avgFitness += creatures[i].GetFitness();
+			}
+			avgFitness /= population;
 			using (StreamWriter w = File.AppendText("stats" + date + ".txt"))
 			{
-				w.WriteLine((int)creatures[0].GetFitness());
+				w.WriteLine((int)creatures[0].GetFitness() + " " + (int)avgFitness);
 			}
 			NN[] bestNNs = new NN[best];
 			for (int i = 0; i < best; i++)
@@ -52,10 +66,29 @@ public class Main : MonoBehaviour
 			for (int i = 0; i < population; i++)
 			{
 				creatures[i].CreateSegments();
-				creatures[i].nn = new NN(bestNNs[Random.Range(0, best)]);
+				if(crossover)
+				{
+					creatures[i].nn = new NN(bestNNs[Random.Range(0, best)], bestNNs[Random.Range(0, best)], 0.5f);
+				}
+				else
+				{
+					creatures[i].nn = new NN(bestNNs[Random.Range(0, best)]);
+				}
 			}
 			time = 0;
 			generation++;
+			if(generation == 200)
+			{
+				for (int i = 0; i < population; i++)
+				{
+					creatures[i].nn = new NN(creatures[i].segments.Count);
+				}
+				generation = 0;
+				using (StreamWriter w = File.AppendText("stats" + date + ".txt"))
+				{
+					w.WriteLine("=====");
+				}
+			}
 		}
 		time += Time.deltaTime;
 	}
